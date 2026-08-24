@@ -1,0 +1,9 @@
+# Secrets
+credential*.json
+
+# Runtime folders (uploads, generated outputs, logs) — anything prefixed with "_"
+_*/
+
+# Python
+__pycache__/
+*.pyc

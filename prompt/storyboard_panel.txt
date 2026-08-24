@@ -1,0 +1,1 @@
+<style descriptor>, storyboard panel, single clean still frame. [<shot size + angle + camera movement>] <subject and action, drawn from one Shot N: line of the video prompt>. <environment and aesthetic detail>. no watermark, no logo, no subtitles, no on-screen text
