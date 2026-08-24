@@ -10,6 +10,8 @@ settings, which script to use — see `SKILL.md`. This file covers plain script 
 - Python 3.10+
 - `requests` installed — all scripts talk to the Ark API directly over HTTP (`scripts/ark_service.py`), no vendor SDK required
 - API key: an `ARK_API_KEY` environment variable if set, otherwise `credential.json`'s `model_ark_key`
+  — copy `credential_tmp.json` to `credential.json` and fill in a real key to get started;
+  `credential.json` is gitignored, `credential_tmp.json` is committed as the setup reference
 - `config.json` with generation settings (model IDs, duration, aspect ratio, resolution,
   audio, watermark) — every script reads its settings from here, not from CLI flags
   or hardcoded constants

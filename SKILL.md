@@ -216,7 +216,7 @@ first, then `model_ark_key` in `credential.json`. Neither lives in `config.json`
 
 - Python 3.10+
 - `requests` installed — all scripts talk to the Ark API directly over HTTP (`scripts/ark_service.py`: `ArkChatService`, `ArkImageService`, `ArkVideoService`), no vendor SDK required
-- API key: an `ARK_API_KEY` environment variable if set, otherwise `credential.json`'s `model_ark_key` — every script checks the env var first (see Configuration below)
+- API key: an `ARK_API_KEY` environment variable if set, otherwise `credential.json`'s `model_ark_key` — every script checks the env var first (see Configuration below). `credential_tmp.json` is a committed placeholder template — copy it to `credential.json` and fill in a real key; `credential.json` itself is gitignored and never committed.
 - `config.json` present (see above) — every script fails fast with a clear error if missing
 
 ### Arguments (all scripts)
