@@ -5,11 +5,12 @@ stitching, and scenario-specific strategies. Pair with `camera-angles.md` for sh
 and `styles.md` for aesthetic direction. See `common-issues.md` when a generation comes back
 wrong and needs a prompt-level fix.
 
-This skill's scripts (`scripts/generate_video_from_text.py`, `scripts/generate_video_from_reference.py`, `scripts/generate_image_from_text.py`,
-`scripts/generate_image_from_reference.py`) read their generation settings — model, duration, aspect ratio, resolution,
-`generate_audio`, `watermark` — from `config.json`, not from the prompt text. Always read
-`config.json` before writing a prompt so the prompt matches what will actually be generated
-(see §0).
+This skill's scripts (`scripts/generate_video_from_text.py`, `scripts/generate_video_from_reference.py`,
+`scripts/generate_video_from_multi_references.py`, `scripts/generate_image_from_text.py`,
+`scripts/generate_image_from_reference.py`, `scripts/generate_character_sheet.py`) read their
+generation settings — model, duration, aspect ratio, resolution, `generate_audio`, `watermark`
+— from `config.json`, not from the prompt text. Always read `config.json` before writing a
+prompt so the prompt matches what will actually be generated (see §0).
 
 ---
 
@@ -109,8 +110,18 @@ No reference image. Prompt alone drives the result. One prompt per line = one im
 Best for: original characters, concept art, first-frame source material.
 
 ### Image Edit → `scripts/generate_image_from_reference.py`
-Takes `--img` + a prompt describing the change. Best for: refining a generated image,
-compositing, style transforms, preparing a first-frame asset for video.
+Takes one or more `--img` + a prompt describing the change. Best for: refining a generated
+image, compositing, style transforms, preparing a first-frame asset for video. Multiple images
+let the model draw on several references at once (e.g. a full property photo set) in a single
+edit call.
+
+### Character Reference Sheet → `scripts/generate_character_sheet.py`
+Takes `--idea` (a subject description, not a full prompt) and optionally one or more `--img`.
+Always uses the same fixed turnaround-sheet template — no chat model call, deterministic every
+time (adapted from `jonah-simple-video-flow`'s `reference_image_prompt.md`). Best for:
+establishing a character's identity once, up front, before animating them — the strongest
+identity anchor for `generate_video_from_reference.py`'s two-step path (§13, E-Commerce/Product
+Ad pattern applies to characters too).
 
 ### Text-to-Video → `scripts/generate_video_from_text.py`
 No reference image, prompt alone drives the video. Best for: original scenes, IP-safe content,
@@ -120,6 +131,13 @@ abstract concepts.
 Takes `--img` (first frame) + a prompt describing what happens next. Best for: character/product
 continuity — generate the image first with `scripts/generate_image_from_text.py`/`scripts/generate_image_from_reference.py`, then animate it.
 This is the recommended two-step path whenever identity or exact framing matters.
+
+### Multi-Image-to-Video (All-Reference) → `scripts/generate_video_from_multi_references.py`
+Takes two or more `--img` + a prompt — Seedance's All-Reference mode (§11). Best for: a video
+that needs to draw on more than one reference at once and can't be reduced to a single
+first-frame image — e.g. a subject identity shot plus a separate background/scene shot, or a
+full multi-photo property/product set like the still-image case above. Reference each image
+in prompt order as `@image1`, `@image2`, etc. (§11).
 
 ---
 
@@ -281,6 +299,22 @@ the motion described below. Preserve all other scene elements.
 ---
 
 ## 11. Multi-Image Reference Patterns
+
+### Subject + separate scene (video, `scripts/generate_video_from_multi_references.py`)
+When a video needs to combine a subject/identity reference with a separate background or scene
+reference, pass both to `--img` in order and address each by position in the prompt:
+```
+@image1 is the subject identity anchor — a professional real-estate agent. @image2 is the
+scene — a modern condominium courtyard at golden hour. Referencing @image1's appearance,
+place the agent in the environment shown in @image2.
+
+Shot 1: [MS, eye level, slow push-in] The agent from @image1 stands in the courtyard from
+@image2, gesturing toward the buildings as he speaks to camera.
+
+no watermark, no logo, no subtitles, no on-screen text
+```
+The order you pass images to `--img` is the order they're numbered — `--img subject.jpg scene.jpg`
+means `@image1` = subject, `@image2` = scene.
 
 ### Multi-angle product (image generation)
 ```

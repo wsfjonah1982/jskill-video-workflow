@@ -16,12 +16,14 @@ settings, which script to use — see `SKILL.md`. This file covers plain script 
   audio, watermark) — every script reads its settings from here, not from CLI flags
   or hardcoded constants
 
-### Arguments (all scripts)
+### Arguments
 
 | Argument   | Description                           |
 |------------|----------------------------------------|
-| `--prompt` | Path to a `.txt` file with the prompt |
-| `--img`    | Path to an input image file           |
+| `--prompt` | Path to a `.txt` file with the prompt (all generation scripts except `generate_character_sheet.py`) |
+| `--idea`   | Path to a `.txt` file with a topic/subject description (`generate_script.py`, `generate_image_prompt.py`, `generate_character_sheet.py`) |
+| `--style`  | Art style string, defaults to `config.json`'s `default_style` (`generate_image_prompt.py`, `generate_video_prompt.py`, `generate_character_sheet.py`) |
+| `--img`    | Path to an input image file. `generate_image_from_reference.py`, `generate_video_from_multi_references.py`, and `generate_character_sheet.py` accept multiple (space-separated); optional for `generate_character_sheet.py` |
 | `--output` | Output file path                      |
 
 ---
@@ -49,6 +51,20 @@ python scripts/generate_image_from_reference.py --img _output/output_image.jpg -
 
 ---
 
+### `scripts/generate_character_sheet.py` — Idea to Character Reference Sheet
+
+Generates a character turnaround sheet (front/side/back view, full body, clean white
+background) from a subject description, using **Seedream 5.0**. Builds its own prompt from a
+fixed template (adapted from `jonah-simple-video-flow`'s `prompts/reference_image_prompt.md`)
+— no chat model call, no `--prompt` needed. With `--img`, one or more photos anchor the
+subject's appearance instead of generating from the description alone.
+
+```bash
+python scripts/generate_character_sheet.py --idea _upload/character_idea.txt --style "Cinematic Realism" --output _output/character_sheet.png
+```
+
+---
+
 ### `scripts/generate_video_from_text.py` — Text to Video
 
 Generates a video from a text prompt using **Seedance 2.5**.
@@ -65,6 +81,18 @@ Generates a video using an image as the first frame, guided by a text prompt, us
 
 ```bash
 python scripts/generate_video_from_reference.py --img _output/output_image.jpg --prompt _log/step2_video_prompt.txt --output _output/output_video.mp4
+```
+
+---
+
+### `scripts/generate_video_from_multi_references.py` — Multiple Images + Prompt to Video
+
+Generates a video from **two or more** reference images (Seedance's All-Reference mode) — e.g.
+a subject identity shot plus a separate background/scene shot — guided by a text prompt, using
+**Seedance 2.5**. For a single reference image, use `generate_video_from_reference.py` instead.
+
+```bash
+python scripts/generate_video_from_multi_references.py --img _output/subject.jpg _output/scene.jpg --prompt _log/combined_prompt.txt --output _output/output_video.mp4
 ```
 
 ---
@@ -125,6 +153,9 @@ python scripts/generate_image_from_text.py --prompt _log/step1_image_prompt.txt 
 # Step 2: animate the image into a video
 python scripts/generate_video_from_reference.py --img _output/output_image.jpg --prompt _log/step2_video_prompt.txt --output _output/output_video.mp4
 ```
+
+For a recurring character, use `generate_character_sheet.py` instead of `generate_image_from_text.py`
+for step 1 — it's a stronger identity anchor for step 2 (turnaround sheet vs. a single angle).
 
 ---
 

@@ -19,7 +19,7 @@ description: >
 ## Overview
 
 This skill does two jobs together: it **writes production-ready prompts** for Seedance 2.5
-(video) and Seedream 5.0 (image), and it **runs the generation** via four bundled scripts.
+(video) and Seedream 5.0 (image), and it **runs the generation** via bundled scripts.
 Don't skip the prompt-writing step — a good structured prompt is the single biggest lever on
 output quality, and it's cheap (no API cost) compared to a wasted generation.
 
@@ -35,7 +35,7 @@ style menu — live in `config.json`, not in the scripts or the prompt text. Rea
 **Always confirm the settings with the user before actually calling a generation script** —
 see Step 5. This applies whether you got there by writing the prompt yourself or via the
 automated Deepseek pipeline below; either way, the last step before spending real API cost is
-the same four scripts and the same confirmation.
+the same generation scripts and the same confirmation.
 
 ---
 
@@ -73,8 +73,8 @@ full scene description), skip straight to writing the prompt.
 | A character turnaround or storyboard panel — check for a ready-made skeleton first | `prompt/` (see `prompt/README.md`) |
 
 Read `references/best-practices.md` at minimum before writing any prompt — it explains the
-core Subject+Motion+Environment+Camera+Aesthetic(+Audio) formula, and which of the four
-scripts fits the task.
+core Subject+Motion+Environment+Camera+Aesthetic(+Audio) formula, and which generation script
+fits the task.
 
 ### Step 4 — Write the prompt to a file
 
@@ -86,13 +86,17 @@ record (Step 6). Two format rules matter:
 - **`scripts/generate_image_from_text.py` reads the file line-by-line** — each non-empty line becomes a
   *separate* image. Write one self-contained one-line prompt per line here; don't put a
   multi-line structured block in this file.
-- **`scripts/generate_image_from_reference.py`, `scripts/generate_video_from_text.py`, `scripts/generate_video_from_reference.py` read the whole file as one
-  prompt** — multi-line structured prompts (style header, shot-by-shot blocks) are expected
-  and encouraged here.
+- **Every other generation script — `generate_image_from_reference.py`, `generate_video_from_text.py`,
+  `generate_video_from_reference.py`, `generate_video_from_multi_references.py` — reads the whole
+  file as one prompt** — multi-line structured prompts (style header, shot-by-shot blocks) are
+  expected and encouraged here.
+- **`scripts/generate_character_sheet.py` doesn't take `--prompt` at all** — give it `--idea`
+  (a plain subject description) instead, and it builds the fixed character-sheet prompt itself.
+  Skip Steps 3–4 for this one; just write the idea description and go straight to Step 5.
 
 ### Step 5 — Confirm settings, then run the script
 
-**Before invoking any of the four generation scripts, show the user the settings that will
+**Before invoking any generation script, show the user the settings that will
 actually be used and get their explicit go-ahead.** These are real, paid, non-instant API
 calls (video generation in particular can run several minutes) — confirm first rather than
 finding out the duration/audio/style was wrong after paying for it. Display a short summary
@@ -121,14 +125,18 @@ Pick the script based on what the user has and wants (see `references/best-pract
 | Have | Want | Script |
 |---|---|---|
 | Nothing (or a text idea) | An image | `scripts/generate_image_from_text.py` |
-| An existing image | A modified/edited image | `scripts/generate_image_from_reference.py` |
+| A subject description (a character/person to keep consistent later) | A three-view turnaround character sheet | `scripts/generate_character_sheet.py` |
+| One or more existing images | A modified/edited image | `scripts/generate_image_from_reference.py` (`--img` accepts multiple) |
 | Nothing (or a text idea) | A video | `scripts/generate_video_from_text.py` |
-| An existing image | A video animated from it | `scripts/generate_video_from_reference.py` |
+| One existing image | A video animated from it | `scripts/generate_video_from_reference.py` |
+| Two or more existing images | A video referencing all of them (e.g. a subject shot + a separate scene shot) | `scripts/generate_video_from_multi_references.py` |
 
 The recommended path when identity/framing matters (products, characters) is **two steps**:
-generate or edit the image first, then animate it with `scripts/generate_video_from_reference.py`, rather than
-going straight to `scripts/generate_video_from_text.py` from text alone. Confirm before each
-of the two calls — they're separate generations with separate costs.
+generate or edit the image first — a character sheet via `scripts/generate_character_sheet.py`
+is the strongest identity anchor when a recurring character matters — then animate it with
+`scripts/generate_video_from_reference.py`, rather than going straight to
+`scripts/generate_video_from_text.py` from text alone. Confirm before each call — they're
+separate generations with separate costs.
 
 ```bash
 python scripts/generate_image_from_text.py --prompt _log/product_shot_prompt.txt --output _output/product_shot.jpg
@@ -180,8 +188,14 @@ python scripts/generate_video_from_reference.py --img _output/reference.jpg --pr
 
 Each script reads `chat_model_id` / `vlm_model_id` from `config.json` and the shared
 `model_ark_key` from `credential.json` — no separate credentials needed. `scripts/ark_service.py`
-holds the shared `ArkChatService` (and `ArkImageService`/`ArkVideoService`, used by the four
+holds the shared `ArkChatService` (and `ArkImageService`/`ArkVideoService`, used by the
 generation scripts) — plain HTTP via the `requests` package (see Prerequisites), not a vendor SDK.
+
+**Shortcut**: if step 2 doesn't need the LLM at all — i.e. you already have a reference photo
+and just want the fixed character-sheet template — steps 2–3 above collapse into one call to
+`scripts/generate_character_sheet.py --idea ... --img ... --output ...`, since it's the same
+fixed template as `generate_image_prompt.py`'s `--img` path, but goes straight to the generated
+image instead of stopping at prompt text.
 
 ---
 
@@ -192,9 +206,9 @@ generation scripts) — plain HTTP via the `requests` package (see Prerequisites
 | `maas_api_endpoint` | BytePlus ARK API base URL | `https://ark.ap-southeast.bytepluses.com/api/v3` |
 | `chat_model_id` | Chat model (e.g. Deepseek) for `scripts/generate_script.py` / `generate_image_prompt.py` / `generate_video_prompt.py` | `deepseek-v4-flash-260425` |
 | `vlm_model_id` | Vision-capable chat model used by `generate_video_prompt.py` when `--img` is given | `seed-2-0-pro-260328` |
-| `image_model_id` | Seedream model for `scripts/generate_image_from_text.py` / `scripts/generate_image_from_reference.py` | `seedream-5-0-260128` |
+| `image_model_id` | Seedream model for `scripts/generate_image_from_text.py` / `scripts/generate_image_from_reference.py` / `scripts/generate_character_sheet.py` | `seedream-5-0-260128` |
 | `image_size` | Seedream output size | `2K` |
-| `video_model_id` | Seedance model for `scripts/generate_video_from_text.py` / `scripts/generate_video_from_reference.py` | `dreamina-seedance-2-5-260628` |
+| `video_model_id` | Seedance model for `scripts/generate_video_from_text.py` / `scripts/generate_video_from_reference.py` / `scripts/generate_video_from_multi_references.py` | `dreamina-seedance-2-5-260628` |
 | `video_resolution` / `video_resolutions` | Current resolution + allowed options | `720p` / `480p, 720p, 1080p, 4K` |
 | `video_ratio` / `video_ratios` | Current aspect ratio + allowed options | `16:9` / `16:9, 9:16, 1:1` |
 | `video_duration_seconds` / `_min` / `_max` | Current clip length + allowed range | `30` / `5` / `30` |
@@ -219,12 +233,14 @@ first, then `model_ark_key` in `credential.json`. Neither lives in `config.json`
 - API key: an `ARK_API_KEY` environment variable if set, otherwise `credential.json`'s `model_ark_key` — every script checks the env var first (see Configuration below). `credential_tmp.json` is a committed placeholder template — copy it to `credential.json` and fill in a real key; `credential.json` itself is gitignored and never committed.
 - `config.json` present (see above) — every script fails fast with a clear error if missing
 
-### Arguments (all scripts)
+### Arguments
 
 | Argument | Description |
 |---|---|
-| `--prompt` | Path to a `.txt` file with the prompt |
-| `--img` | Path to an input image file (required for `scripts/generate_image_from_reference.py`, `scripts/generate_video_from_reference.py`) |
+| `--prompt` | Path to a `.txt` file with the prompt. Used by `generate_image_from_text.py`, `generate_image_from_reference.py`, `generate_video_from_text.py`, `generate_video_from_reference.py`, `generate_video_from_multi_references.py` (not `generate_character_sheet.py`, which builds its own prompt from `--idea` — see below) |
+| `--idea` | Path to a `.txt` file with a topic/subject description. Used by `scripts/generate_script.py`, `generate_image_prompt.py`, and `generate_character_sheet.py` in place of `--prompt` |
+| `--style` | Art style string, defaults to `config.json`'s `default_style`. Used by `generate_image_prompt.py`, `generate_video_prompt.py`, `generate_character_sheet.py` |
+| `--img` | Path to an input image file. Required for `scripts/generate_image_from_reference.py`, `scripts/generate_video_from_reference.py`; optional for `scripts/generate_character_sheet.py`; accepts multiple values (space-separated) for `scripts/generate_image_from_reference.py`, `scripts/generate_video_from_multi_references.py`, and `scripts/generate_character_sheet.py` |
 | `--output` | Output file path |
 
 ---

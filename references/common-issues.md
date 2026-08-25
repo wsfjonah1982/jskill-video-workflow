@@ -93,8 +93,8 @@ no watermark, no logo, no platform branding, no copyright marks
 ```
 
 ### Config fix
-- `watermark: false` in `config.json` is already the default for all four scripts — verify
-  it hasn't been flipped to `true` before assuming this is a prompt-level bug.
+- `watermark: false` in `config.json` is already the default for every generation script —
+  verify it hasn't been flipped to `true` before assuming this is a prompt-level bug.
 
 ### Input fix
 - Check reference images for existing platform watermarks and remove before uploading
