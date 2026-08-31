@@ -33,17 +33,17 @@ def load_config() -> dict:
 
 
 def load_api_key() -> str:
-    env_key = os.environ.get("ARK_API_KEY")
+    env_key = os.environ.get("model_ark_key")
     if env_key:
         return env_key
     if not CREDENTIAL_PATH.exists():
         raise FileNotFoundError(
-            f"ARK_API_KEY env var not set, and credential file not found: {CREDENTIAL_PATH}"
+            f"model_ark_key env var not set, and credential file not found: {CREDENTIAL_PATH}"
         )
     cred = read_json(CREDENTIAL_PATH)
     api_key = cred.get("model_ark_key")
     if not api_key:
-        raise KeyError("ARK_API_KEY env var not set and `model_ark_key` missing in credential.json")
+        raise KeyError("model_ark_key env var not set and `model_ark_key` missing in credential.json")
     return api_key
 
 

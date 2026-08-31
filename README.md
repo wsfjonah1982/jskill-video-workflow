@@ -9,7 +9,7 @@ settings, which script to use — see `SKILL.md`. This file covers plain script 
 
 - Python 3.10+
 - `requests` installed — all scripts talk to the Ark API directly over HTTP (`scripts/ark_service.py`), no vendor SDK required
-- API key: an `ARK_API_KEY` environment variable if set, otherwise `credential.json`'s `model_ark_key`
+- API key: a `model_ark_key` environment variable if set, otherwise `credential.json`'s `model_ark_key`
   — copy `credential_tmp.json` to `credential.json` and fill in a real key to get started;
   `credential.json` is gitignored, `credential_tmp.json` is committed as the setup reference
 - `config.json` with generation settings (model IDs, duration, aspect ratio, resolution,
@@ -180,7 +180,7 @@ for step 1 — it's a stronger identity anchor for step 2 (turnaround sheet vs. 
 ## Configuration
 
 - `credential.json` — secrets fallback (`model_ark_key`); every script checks the
-  `ARK_API_KEY` environment variable first and only reads this file if that's unset
+  `model_ark_key` environment variable first and only reads this file if that's unset
 - `config.json` — everything else: model IDs (including `chat_model_id` / `vlm_model_id` for
   the Deepseek scripts), duration, aspect ratio, resolution, `generate_audio`, `watermark`,
   image size, style menu. Edit this file to change generation behavior; the scripts read it
