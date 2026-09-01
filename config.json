@@ -2,7 +2,7 @@
   "maas_api_endpoint": "https://ark.ap-southeast.bytepluses.com/api/v3",
   "chat_model_id": "deepseek-v4-flash-260425",
   "vlm_model_id": "seed-2-0-pro-260328",
-  "image_model_id": "seedream-5-0-260128",
+  "image_model_id": "dola-seedream-5-0-pro-260628",
   "image_size": "2K",
   "video_model_id": "dreamina-seedance-2-5-260628",
   "video_resolution": "720p",
