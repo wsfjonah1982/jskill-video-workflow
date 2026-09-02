@@ -1,0 +1,16 @@
+Cinematic realism, photorealistic, energetic sports-commercial aesthetic, bright natural daylight, dynamic handheld-feel camera, <ratio>, <duration>s.
+
+@image1 is the subject identity anchor — <character description: age/build, distinctive features, athletic-casual styling, energetic expression>. @image2 is the product reference — <product description: what it is, and if it has multiple variants, list them, e.g. "one sneaker model shown in N colourways (variant 1, variant 2, ...)">.
+
+Shot 1: [WS, dynamic tracking, slight low angle] <sporty/energetic setting>. The subject from @image1 <energetic action tied to the setting> with the <variant 1> from @image2, <a physical detail that reads as motion>, confident energetic expression.
+Dialogue (Subject1, upbeat and playful): {<opening hook line>}
+(<music cue — genre/tempo that fits the scene>)
+
+Shot 2: [quick cuts, close on the product in motion] A fast montage of the subject in continued action, cutting rapidly between several product variants from @image2 (<variant 2>, <variant 3>, ...) as each is used, product detail clearly visible with each cut.
+<action-appropriate sound effect> <ambient sound> <music continues>
+
+Shot 3: [WS, all variants displayed] The subject settles into a final pose, then presents all product variants from @image2 lined up together, gestures proudly across the lineup, energetic confident smile, turns to face camera, <setting backdrop> behind them.
+Dialogue (Subject1, upbeat and playful): {<closing line>}
+(<music cue — resolves/swells to a finish>)
+
+Preserve the exact product design, construction, and all variants shown in the reference image — do not alter its shape or add new variants. Ignore and do not reproduce any labels, watermark, logo, or text visible in the reference image. no watermark, no logo, no subtitles, no on-screen text, no duplicate characters, no additional people, maintain cinematic realism sports-commercial style throughout. <any scene-specific safety constraint, if the action calls for one — e.g. "safe realistic movement, no dangerous heights, no falling" for parkour>
