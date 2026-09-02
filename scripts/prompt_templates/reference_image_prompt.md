@@ -1,1 +1,1 @@
-Character sheet, turnaround, three views, full body, standing presentation. {idea}. Front view, side view, and back view. Crisp details, high resolution, clean solid white background.
+Character sheet, turnaround, three views, full body, standing presentation. {idea}. Front view, side view, and back view. Crisp details, high resolution, clean solid white background. no watermark, no logo, no brand text, no on-screen text, no invented branding on clothing or props.

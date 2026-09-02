@@ -79,6 +79,24 @@ and a plain retry clears them).
 
 ---
 
+## V-0e: Invented Brand/Logo on Character Sheets
+
+**Symptom**: `scripts/generate_character_sheet.py` output shows a fabricated brand name and logo
+on the subject's clothing or held props (e.g. a made-up company name printed on a blazer and
+brochure) that was never in the `--idea` description.
+
+**Root cause**: A subject description implying a professional role with a prop (e.g. "real-estate
+agent... holding a property brochure") gives the model room to invent plausible-looking business
+branding to fill the prop/clothing, and the character-sheet template didn't carry the standard
+"no watermark, no logo" negative constraint that every other prompt in this skill includes
+(`references/best-practices.md` §14).
+
+**Fix**: Already fixed — `scripts/prompt_templates/reference_image_prompt.md` and
+`prompt/three_angle_character_sheet.txt` both now end with
+`no watermark, no logo, no brand text, no on-screen text, no invented branding on clothing or props.`
+
+---
+
 ## V-1: Character ID Drift ("Face Swap" Mid-Video)
 
 **Symptom**: Generated character looks different from the reference image, or the
@@ -266,6 +284,7 @@ Voiceover finishes: {line here.} — followed by 1s ambient silence before clip 
 | V-0b | `role` required on multi-reference images | Already fixed in `generate_video_from_multi_references.py` — each image gets `"role": "reference_image"` |
 | V-0c | Reference image shorter than 300px rejected | Upscale it first (PIL resize, or AI upscale via `generate_image_from_reference.py`) |
 | V-0d | Image generation read timeout (120s) | Already fixed — `ark_service.py`'s `ArkImageService` now uses a 300s timeout; retry on transient network errors |
+| V-0e | Character sheet invents a brand/logo | Already fixed — both character-sheet templates now include `no watermark, no logo, no brand text, no invented branding` |
 | V-1 | Character face changes | Use a clean, well-lit, tightly-cropped reference image as the first frame |
 | V-2 | Unwanted subtitles | Add "no subtitles" to prompt; set `video_ratio: "16:9"` in config |
 | V-3 | Platform logos/watermarks | Add "no watermark, no logo" to prompt; confirm `watermark: false` in config |
