@@ -17,8 +17,8 @@ if hasattr(sys.stderr, "reconfigure"):
 BASE_DIR        = Path(__file__).resolve().parent.parent  # skill root — credential.json/config.json live here, not in scripts/
 CREDENTIAL_PATH = BASE_DIR / "credential.json"
 CONFIG_PATH     = BASE_DIR / "config.json"
-LOG_DIR         = BASE_DIR / "_log"
-OUTPUT_PATH     = BASE_DIR / "_output" / "output_video.mp4"
+LOG_DIR         = BASE_DIR / "_project" / "log"
+OUTPUT_PATH     = BASE_DIR / "_project" / "output" / "output_video.mp4"
 
 
 def read_json(path: Path) -> dict:
@@ -58,12 +58,13 @@ def main() -> int:
     parser.add_argument("--img",    required=True, help="Input image file path")
     parser.add_argument("--prompt", required=True, help="Path to prompt text file")
     parser.add_argument("--output", default=str(OUTPUT_PATH), help="Output video file path (e.g. out.mp4)")
+    parser.add_argument("--log-dir", default=str(LOG_DIR), help="Directory for the .log JSON record (defaults to _project/log)")
     args = parser.parse_args()
 
     image_path  = Path(args.img)
     prompt_path = Path(args.prompt)
     output_path = Path(args.output)
-    log_path    = LOG_DIR / f"{output_path.name}.log"
+    log_path    = Path(args.log_dir) / f"{output_path.name}.log"
 
     if not image_path.exists():
         print(f"Error: input image not found: {image_path}", file=sys.stderr)

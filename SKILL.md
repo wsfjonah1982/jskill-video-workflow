@@ -70,7 +70,7 @@ full scene description), skip straight to writing the prompt.
 | Camera angles, movement, lens choices | `references/camera-angles.md` |
 | Visual style descriptors and example prompts | `references/styles.md` |
 | A generation came back wrong (subtitles, watermark, style drift, twin characters, stutter at joins) | `references/common-issues.md` |
-| A character turnaround or storyboard panel — check for a ready-made skeleton first | `prompt/` (see `prompt/README.md`) |
+| A character turnaround or storyboard panel — check for a ready-made skeleton first | `prompt/` (see `prompt/README.md`) — this is the skill's own template library, not the same as `_project/prompt/` below |
 
 Read `references/best-practices.md` at minimum before writing any prompt — it explains the
 core Subject+Motion+Environment+Camera+Aesthetic(+Audio) formula, and which generation script
@@ -78,10 +78,10 @@ fits the task.
 
 ### Step 4 — Write the prompt to a file
 
-Save the finished prompt as a `.txt` file under `_log/` (create a descriptive filename,
-e.g. `_log/product_orbit_prompt.txt`) — `_log/` doubles as the prompt-log: it's the record of
+Save the finished prompt as a `.txt` file under `_project/prompt/` (create a descriptive
+filename, e.g. `_project/prompt/product_orbit_prompt.txt`) — this is the per-project record of
 exactly what prompt produced which generation, alongside each run's `.log` JSON transaction
-record (Step 6). Two format rules matter:
+record in `_project/log/` (Step 6). Two format rules matter:
 
 - **`scripts/generate_image_from_text.py` reads the file line-by-line** — each non-empty line becomes a
   *separate* image. Write one self-contained one-line prompt per line here; don't put a
@@ -108,8 +108,8 @@ About to generate:
   Model:     dreamina-seedance-2-5-260628 (Seedance 2.5)
   Duration:  30s        Resolution: 720p        Ratio: follows input image
   Audio:     true (dialogue + music)             Watermark: false
-  Reference: _output/singapore_condo_agent_v2.jpg
-  Prompt:    _log/singapore_condo_agent_v2_video_prompt_30s_audio.txt
+  Reference: _project/output/singapore_condo_agent_v2.jpg
+  Prompt:    _project/prompt/singapore_condo_agent_v2_video_prompt_30s_audio.txt
 
 Proceed?
 ```
@@ -139,18 +139,18 @@ is the strongest identity anchor when a recurring character matters — then ani
 separate generations with separate costs.
 
 ```bash
-python scripts/generate_image_from_text.py --prompt _log/product_shot_prompt.txt --output _output/product_shot.jpg
-python scripts/generate_video_from_reference.py --img _output/product_shot.jpg --prompt _log/product_orbit_prompt.txt --output _output/product_orbit.mp4
+python scripts/generate_image_from_text.py --prompt _project/prompt/product_shot_prompt.txt --output _project/output/product_shot.jpg
+python scripts/generate_video_from_reference.py --img _project/output/product_shot.jpg --prompt _project/prompt/product_orbit_prompt.txt --output _project/output/product_orbit.mp4
 ```
 
 ### Step 6 — Report results, watch for known issues
 
 Each script prints only the output file path to stdout on success; progress goes to stderr,
-and a `.log` JSON-lines transaction record is written to `_log/` (named after the output file,
-e.g. `_output/product_orbit.mp4` → `_log/product_orbit.mp4.log`) — not next to the output
-itself. After a run, skim the log for `status: failed` and check the output against
-`references/common-issues.md` if something looks off (subtitles that weren't asked for, a
-watermark, style drift, duplicate characters) — most of these have a one-line prompt fix or a
+and a `.log` JSON-lines transaction record is written to `_project/log/` (named after the output
+file, e.g. `_project/output/product_orbit.mp4` → `_project/log/product_orbit.mp4.log`) — not
+next to the output itself. After a run, skim the log for `status: failed` and check the output
+against `references/common-issues.md` if something looks off (subtitles that weren't asked for,
+a watermark, style drift, duplicate characters) — most of these have a one-line prompt fix or a
 `config.json` fix.
 
 ---
@@ -168,22 +168,22 @@ the prompt yourself per Steps 2–4 above is simpler and lets you use the full
 
 ```bash
 # 1. Idea → short script (chat_model_id, e.g. Deepseek)
-python scripts/generate_script.py --idea _upload/idea.txt --output _log/script.txt
+python scripts/generate_script.py --idea _project/input/idea.txt --output _project/script/script.txt
 
 # 2. Idea (+ style) → image-generation prompt. With --img, skips the LLM call entirely and
 #    uses a plain turnaround template instead, since the photo already carries the subject's
 #    appearance (same logic as jonah-simple-video-flow).
-python scripts/generate_image_prompt.py --idea _upload/idea.txt --style "Cinematic Realism" --output _log/image_prompt.txt
+python scripts/generate_image_prompt.py --idea _project/input/idea.txt --style "Cinematic Realism" --output _project/prompt/image_prompt.txt
 
 # 3. Reference image
-python scripts/generate_image_from_text.py --prompt _log/image_prompt.txt --output _output/reference.jpg
+python scripts/generate_image_from_text.py --prompt _project/prompt/image_prompt.txt --output _project/output/reference.jpg
 
 # 4. Script (+ reference image) → video-generation prompt. With --img, attaches the image to
 #    the call and uses vlm_model_id instead of chat_model_id, so the model can see it.
-python scripts/generate_video_prompt.py --script _log/script.txt --img _output/reference.jpg --output _log/video_prompt.txt
+python scripts/generate_video_prompt.py --script _project/script/script.txt --img _project/output/reference.jpg --output _project/prompt/video_prompt.txt
 
 # 5. Final video, same as the normal path
-python scripts/generate_video_from_reference.py --img _output/reference.jpg --prompt _log/video_prompt.txt --output _output/final.mp4
+python scripts/generate_video_from_reference.py --img _project/output/reference.jpg --prompt _project/prompt/video_prompt.txt --output _project/output/final.mp4
 ```
 
 Each script reads `chat_model_id` / `vlm_model_id` from `config.json` and the shared
@@ -242,6 +242,7 @@ first, then `model_ark_key` in `credential.json`. Neither lives in `config.json`
 | `--style` | Art style string, defaults to `config.json`'s `default_style`. Used by `generate_image_prompt.py`, `generate_video_prompt.py`, `generate_character_sheet.py` |
 | `--img` | Path to an input image file. Required for `scripts/generate_image_from_reference.py`, `scripts/generate_video_from_reference.py`; optional for `scripts/generate_character_sheet.py`; accepts multiple values (space-separated) for `scripts/generate_image_from_reference.py`, `scripts/generate_video_from_multi_references.py`, and `scripts/generate_character_sheet.py` |
 | `--output` | Output file path |
+| `--log-dir` | Directory for the `.log` JSON transaction record, named after `--output`'s filename. Defaults to `_project/log/`, but every script accepts this explicitly — see "The project folder is dynamic" below |
 
 ---
 
@@ -250,11 +251,29 @@ first, then `model_ark_key` in `credential.json`. Neither lives in `config.json`
 | Folder | Purpose |
 |---|---|
 | `references/` | Prompt-engineering knowledge this skill uses — read as needed per Step 3 |
-| `prompt/` | Predefined, reusable prompt templates (e.g. three-angle character sheet, storyboard panel) — see `prompt/README.md` |
-| `scripts/prompt_templates/` | System/user templates for the Deepseek automated-authoring scripts (see above) — not the same as `prompt/` |
-| `_upload/` | Files uploaded to the system — reference images, audio, source material |
-| `_output/` | Generated results from API calls — images, videos |
-| `_log/` | Transaction logs: each run's `.log` JSON record, plus the prompt `.txt` files you write per Step 4 |
+| `prompt/` | The skill's own predefined, reusable prompt templates (e.g. three-angle character sheet, storyboard panel) — see `prompt/README.md`. Not project-specific, and not the same as `_project/prompt/` below |
+| `scripts/prompt_templates/` | System/user templates for the Deepseek automated-authoring scripts (see above) — not the same as `prompt/` or `_project/prompt/` |
+| `_project/` | **Working folder for the project currently in progress.** Everything for that one project lives here, in dedicated subfolders — see below. This is the default location every generation script now reads/writes to (see each script's `--output`/`--prompt`/`--img` default). Before starting a new project, archive or clear out the previous one's `_project/` contents. |
+| `_project/input/` | Reference images, audio, source material for this project (replaces the old shared `_upload/`) |
+| `_project/output/` | Generated results from API calls for this project — images, videos (replaces the old shared `_output/`) |
+| `_project/log/` | Each run's `.log` JSON transaction record for this project (replaces the old shared `_log/`'s `.log` files) |
+| `_project/script/` | The video script / narration text for this project (e.g. `scripts/generate_script.py`'s output) |
+| `_project/prompt/` | The generation prompt `.txt` files you write per Step 4 (or that `generate_image_prompt.py`/`generate_video_prompt.py` produce) for this project |
+| `_upload/`, `_output/`, `_log/` (top-level) | Legacy shared folders from before the per-project convention — still hold older projects' files; don't add new work here |
+
+### The project folder is dynamic, not fixed
+
+`_project/` is this skill's **default** name and location for the active project's working
+folder — but treat it as a convention, not a hard requirement. Every generation script takes
+explicit `--output`, `--prompt`, `--img`/`--idea`, and `--log-dir` paths (the `_project/...`
+defaults shown throughout this doc are just fallbacks when no path is given). Whether `_project/`
+itself is writable, exists, or is even the right place at all depends on the agent harness
+environment actually running this skill — working-directory conventions, filesystem permissions,
+a designated scratch/session directory, or multiple concurrent projects can all mean the real
+project folder for a given session lives somewhere else. When that's the case, don't fight the
+`_project/` convention: point `--output`/`--prompt`/`--img`/`--log-dir` at whatever folder is
+actually appropriate for the current environment, keeping the same `input/output/log/script/prompt`
+subfolder shape so the project stays self-contained and organized the way `_project/` would be.
 
 See `README.md` for plain script usage without the prompt-crafting workflow (e.g. re-running
 an existing prompt file).

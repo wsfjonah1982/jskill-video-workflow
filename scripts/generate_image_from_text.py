@@ -17,9 +17,9 @@ if hasattr(sys.stderr, "reconfigure"):
 BASE_DIR        = Path(__file__).resolve().parent.parent  # skill root — credential.json/config.json live here, not in scripts/
 CREDENTIAL_PATH = BASE_DIR / "credential.json"
 CONFIG_PATH     = BASE_DIR / "config.json"
-LOG_DIR         = BASE_DIR / "_log"
-PROMPT_PATH     = BASE_DIR / "_log" / "picture.txt"
-OUTPUT_PATH     = BASE_DIR / "_output" / "output.png"
+LOG_DIR         = BASE_DIR / "_project" / "log"
+PROMPT_PATH     = BASE_DIR / "_project" / "prompt" / "picture.txt"
+OUTPUT_PATH     = BASE_DIR / "_project" / "output" / "output.png"
 
 
 def read_json(path: Path) -> dict:
@@ -74,11 +74,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--prompt", default=str(PROMPT_PATH), help="Path to prompt text file (one prompt per line)")
     parser.add_argument("--output", default=str(OUTPUT_PATH), help="Output image file path (e.g. out.png)")
+    parser.add_argument("--log-dir", default=str(LOG_DIR), help="Directory for the .log JSON record (defaults to _project/log)")
     args = parser.parse_args()
 
     prompt_path  = Path(args.prompt)
     output_base  = Path(args.output)
-    log_path     = LOG_DIR / f"{output_base.name}.log"
+    log_path     = Path(args.log_dir) / f"{output_base.name}.log"
 
     t_start = time.monotonic()
     output_base.parent.mkdir(parents=True, exist_ok=True)

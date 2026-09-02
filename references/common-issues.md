@@ -25,6 +25,42 @@ image-to-video, control it via the reference image's generation, not `config.jso
 
 ---
 
+## V-0b: `role` Required for Multi-Reference Images
+
+**Symptom**: `scripts/generate_video_from_multi_references.py` fails immediately with
+`400 InvalidParameter — "role must be specified for image contents"`.
+
+**Root cause**: Unlike single-image (first-frame) generation, Seedance's All-Reference mode
+requires every `image_url` content item to carry `"role": "reference_image"` — omitting it is
+rejected outright.
+
+**Fix**: Already handled in `scripts/generate_video_from_multi_references.py` — each image
+content item includes `"role": "reference_image"` alongside `image_url`.
+
+---
+
+## V-0c: Reference Image Too Small
+
+**Symptom**: A generation script fails immediately with
+`400 InvalidParameter — "expected the height to be at least 300px, but received a WxH image instead"`.
+
+**Root cause**: The Ark API rejects any input reference image (image-to-video, multi-reference,
+or image-edit) shorter than 300px on its shortest side — common with thumbnail-sized photos
+pulled from listings/search results (e.g. a `347x196` property photo).
+
+**Fix**: Upscale the offending image before passing it to `--img`. A quick, free fix:
+```python
+from PIL import Image
+im = Image.open("small.jpg")
+im.resize((im.width * 4, im.height * 4), Image.LANCZOS).save("small_resized.jpg", quality=95)
+```
+For a genuinely low-quality source, an AI upscale via `scripts/generate_image_from_reference.py`
+(an enhance/upscale prompt) produces sharper detail than interpolation — ask the user which they
+prefer before spending the extra API call, since PIL resizing is free/instant and AI upscaling
+is a small paid generation.
+
+---
+
 ## V-1: Character ID Drift ("Face Swap" Mid-Video)
 
 **Symptom**: Generated character looks different from the reference image, or the
@@ -209,6 +245,8 @@ Voiceover finishes: {line here.} — followed by 1s ambient silence before clip 
 | Code | Issue | Quick fix |
 |---|---|---|
 | V-0 | `ratio` rejected on image-to-video | Already fixed in `ark_service.py` — `generate_video_from_reference.py` omits `ratio`, output follows the input image |
+| V-0b | `role` required on multi-reference images | Already fixed in `generate_video_from_multi_references.py` — each image gets `"role": "reference_image"` |
+| V-0c | Reference image shorter than 300px rejected | Upscale it first (PIL resize, or AI upscale via `generate_image_from_reference.py`) |
 | V-1 | Character face changes | Use a clean, well-lit, tightly-cropped reference image as the first frame |
 | V-2 | Unwanted subtitles | Add "no subtitles" to prompt; set `video_ratio: "16:9"` in config |
 | V-3 | Platform logos/watermarks | Add "no watermark, no logo" to prompt; confirm `watermark: false` in config |

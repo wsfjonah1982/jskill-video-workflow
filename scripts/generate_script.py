@@ -17,9 +17,9 @@ if hasattr(sys.stderr, "reconfigure"):
 BASE_DIR         = Path(__file__).resolve().parent.parent  # skill root — credential.json/config.json live here, not in scripts/
 CREDENTIAL_PATH  = BASE_DIR / "credential.json"
 CONFIG_PATH      = BASE_DIR / "config.json"
-LOG_DIR          = BASE_DIR / "_log"
+LOG_DIR          = BASE_DIR / "_project" / "log"
 TEMPLATES_DIR    = Path(__file__).resolve().parent / "prompt_templates"
-OUTPUT_PATH      = BASE_DIR / "_log" / "script.txt"
+OUTPUT_PATH      = BASE_DIR / "_project" / "script" / "script.txt"
 
 
 def read_json(path: Path) -> dict:
@@ -69,11 +69,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Turn a topic/idea into a short video script using a chat model (e.g. Deepseek).")
     parser.add_argument("--idea", required=True, help="Path to a .txt file with the topic/idea")
     parser.add_argument("--output", default=str(OUTPUT_PATH), help="Output .txt file path for the generated script")
+    parser.add_argument("--log-dir", default=str(LOG_DIR), help="Directory for the .log JSON record (defaults to _project/log)")
     args = parser.parse_args()
 
     idea_path   = Path(args.idea)
     output_path = Path(args.output)
-    log_path    = LOG_DIR / f"{output_path.name}.log"
+    log_path    = Path(args.log_dir) / f"{output_path.name}.log"
 
     if not idea_path.exists():
         print(f"Error: idea file not found: {idea_path}", file=sys.stderr)

@@ -25,6 +25,7 @@ settings, which script to use — see `SKILL.md`. This file covers plain script 
 | `--style`  | Art style string, defaults to `config.json`'s `default_style` (`generate_image_prompt.py`, `generate_video_prompt.py`, `generate_character_sheet.py`) |
 | `--img`    | Path to an input image file. `generate_image_from_reference.py`, `generate_video_from_multi_references.py`, and `generate_character_sheet.py` accept multiple (space-separated); optional for `generate_character_sheet.py` |
 | `--output` | Output file path                      |
+| `--log-dir` | Directory for the `.log` JSON record, named after `--output`'s filename. Defaults to `_project/log/` — see "The project folder is dynamic" below |
 
 ---
 
@@ -36,7 +37,7 @@ Generates an image from a text prompt using **Seedream 5.0**. Each non-empty lin
 prompt file is generated as a separate image.
 
 ```bash
-python scripts/generate_image_from_text.py --prompt _log/step1_image_prompt.txt --output _output/output_image.jpg
+python scripts/generate_image_from_text.py --prompt _project/prompt/step1_image_prompt.txt --output _project/output/output_image.jpg
 ```
 
 ---
@@ -46,7 +47,7 @@ python scripts/generate_image_from_text.py --prompt _log/step1_image_prompt.txt 
 Edits or transforms an existing image guided by a text prompt using **Seedream 5.0**.
 
 ```bash
-python scripts/generate_image_from_reference.py --img _output/output_image.jpg --prompt _log/edit_prompt.txt --output _output/output_image_edit.jpg
+python scripts/generate_image_from_reference.py --img _project/output/output_image.jpg --prompt _project/prompt/edit_prompt.txt --output _project/output/output_image_edit.jpg
 ```
 
 ---
@@ -60,7 +61,7 @@ fixed template (adapted from `jonah-simple-video-flow`'s `prompts/reference_imag
 subject's appearance instead of generating from the description alone.
 
 ```bash
-python scripts/generate_character_sheet.py --idea _upload/character_idea.txt --style "Cinematic Realism" --output _output/character_sheet.png
+python scripts/generate_character_sheet.py --idea _project/input/character_idea.txt --style "Cinematic Realism" --output _project/output/character_sheet.png
 ```
 
 ---
@@ -70,7 +71,7 @@ python scripts/generate_character_sheet.py --idea _upload/character_idea.txt --s
 Generates a video from a text prompt using **Seedance 2.5**.
 
 ```bash
-python scripts/generate_video_from_text.py --prompt _log/step2_video_prompt.txt --output _output/output_video.mp4
+python scripts/generate_video_from_text.py --prompt _project/prompt/step2_video_prompt.txt --output _project/output/output_video.mp4
 ```
 
 ---
@@ -80,7 +81,7 @@ python scripts/generate_video_from_text.py --prompt _log/step2_video_prompt.txt 
 Generates a video using an image as the first frame, guided by a text prompt, using **Seedance 2.5**.
 
 ```bash
-python scripts/generate_video_from_reference.py --img _output/output_image.jpg --prompt _log/step2_video_prompt.txt --output _output/output_video.mp4
+python scripts/generate_video_from_reference.py --img _project/output/output_image.jpg --prompt _project/prompt/step2_video_prompt.txt --output _project/output/output_video.mp4
 ```
 
 ---
@@ -92,7 +93,7 @@ a subject identity shot plus a separate background/scene shot — guided by a te
 **Seedance 2.5**. For a single reference image, use `generate_video_from_reference.py` instead.
 
 ```bash
-python scripts/generate_video_from_multi_references.py --img _output/subject.jpg _output/scene.jpg --prompt _log/combined_prompt.txt --output _output/output_video.mp4
+python scripts/generate_video_from_multi_references.py --img _project/output/subject.jpg _project/output/scene.jpg --prompt _project/prompt/combined_prompt.txt --output _project/output/output_video.mp4
 ```
 
 ---
@@ -108,7 +109,7 @@ prompt-crafting workflow described in `SKILL.md`.
 Turns a topic/idea into a short scene-by-scene script using `chat_model_id` (e.g. Deepseek).
 
 ```bash
-python scripts/generate_script.py --idea _upload/idea.txt --output _log/script.txt
+python scripts/generate_script.py --idea _project/input/idea.txt --output _project/script/script.txt
 ```
 
 ### `scripts/generate_image_prompt.py` — Idea to Image Prompt
@@ -118,7 +119,7 @@ is given, skips the LLM call and uses a plain character-turnaround template inst
 reference photo already carries the subject's appearance.
 
 ```bash
-python scripts/generate_image_prompt.py --idea _upload/idea.txt --style "Cinematic Realism" --output _log/image_prompt.txt
+python scripts/generate_image_prompt.py --idea _project/input/idea.txt --style "Cinematic Realism" --output _project/prompt/image_prompt.txt
 ```
 
 ### `scripts/generate_video_prompt.py` — Script to Video Prompt
@@ -128,7 +129,7 @@ Turns a script (+ style, duration, ratio) into a structured video-generation pro
 `vlm_model_id` instead, so the model can see it.
 
 ```bash
-python scripts/generate_video_prompt.py --script _log/script.txt --img _output/reference.jpg --output _log/video_prompt.txt
+python scripts/generate_video_prompt.py --script _project/script/script.txt --img _project/output/reference.jpg --output _project/prompt/video_prompt.txt
 ```
 
 ### `scripts/ark_service.py`
@@ -148,10 +149,10 @@ templates (see Subfolders below).
 
 ```bash
 # Step 1: generate image from prompt
-python scripts/generate_image_from_text.py --prompt _log/step1_image_prompt.txt --output _output/output_image.jpg
+python scripts/generate_image_from_text.py --prompt _project/prompt/step1_image_prompt.txt --output _project/output/output_image.jpg
 
 # Step 2: animate the image into a video
-python scripts/generate_video_from_reference.py --img _output/output_image.jpg --prompt _log/step2_video_prompt.txt --output _output/output_video.mp4
+python scripts/generate_video_from_reference.py --img _project/output/output_image.jpg --prompt _project/prompt/step2_video_prompt.txt --output _project/output/output_video.mp4
 ```
 
 For a recurring character, use `generate_character_sheet.py` instead of `generate_image_from_text.py`
@@ -163,19 +164,34 @@ for step 1 — it's a stronger identity anchor for step 2 (turnaround sheet vs. 
 
 - All scripts print **only the output file path** to stdout on success.
 - Progress and status messages go to stderr.
-- A `.log` file (JSON lines) is written to `_log/`, named after the output file
-  (e.g. `_output/output_video.mp4` → `_log/output_video.mp4.log`) — not next to the output itself.
+- A `.log` file (JSON lines) is written to `_project/log/`, named after the output file
+  (e.g. `_project/output/output_video.mp4` → `_project/log/output_video.mp4.log`) — not next to
+  the output itself.
 
 ## Subfolders
 
 | Folder | Purpose |
 |--------|---------|
 | `references/` | Prompt-engineering knowledge (formula, camera language, styles, known issues) |
-| `prompt/` | Predefined, reusable prompt templates (three-angle character sheet, storyboard panel) — see `prompt/README.md` |
-| `scripts/prompt_templates/` | System/user templates for the Deepseek prompt-authoring scripts (not the same as `prompt/`) |
-| `_upload/` | Files uploaded to the system — images, audio, reference materials |
-| `_output/` | Generated results from API calls — images, videos |
-| `_log/` | Transaction logs: each run's `.log` JSON record, plus the prompt `.txt` files used to produce it |
+| `prompt/` | The skill's own predefined, reusable prompt templates (three-angle character sheet, storyboard panel) — see `prompt/README.md`. Not the same as `_project/prompt/` below |
+| `scripts/prompt_templates/` | System/user templates for the Deepseek prompt-authoring scripts (not the same as `prompt/` or `_project/prompt/`) |
+| `_project/` | Working folder for the project currently in progress — every script's default `--input`/`--output`/`--prompt`/`--log` path now points here. Archive or clear it before starting a new project. |
+| `_project/input/` | Files uploaded for this project — images, audio, reference materials |
+| `_project/output/` | Generated results from API calls for this project — images, videos |
+| `_project/log/` | Transaction logs: each run's `.log` JSON record for this project |
+| `_project/script/` | This project's video script / narration text |
+| `_project/prompt/` | This project's generation prompt `.txt` files |
+| `_upload/`, `_output/`, `_log/` (top-level) | Legacy shared folders from before the per-project convention — hold older projects' files; don't add new work here |
+
+### The project folder is dynamic, not fixed
+
+`_project/` is the default — every script also accepts explicit `--output`, `--prompt`,
+`--img`/`--idea`, and `--log-dir` paths, so nothing is hardwired to that name. Whether
+`_project/` is writable, exists, or is the right place at all depends on the agent harness
+environment running this skill (working-directory rules, filesystem permissions, a designated
+scratch directory, multiple concurrent projects, etc.). When it isn't, point the scripts at
+whatever folder is actually appropriate for that environment, keeping the same
+`input/output/log/script/prompt` subfolder shape.
 
 ## Configuration
 
