@@ -116,7 +116,7 @@ class ArkImageService:
         if watermark is not None:
             payload['watermark'] = watermark
 
-        resp = requests.post(self._url, headers=self._headers, json=payload, timeout=120)
+        resp = requests.post(self._url, headers=self._headers, json=payload, timeout=300)
         if resp.status_code != 200:
             raise RuntimeError(f"Ark API error {resp.status_code}: {resp.text}")
         data = resp.json()

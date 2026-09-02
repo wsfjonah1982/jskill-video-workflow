@@ -126,6 +126,7 @@ Pick the script based on what the user has and wants (see `references/best-pract
 |---|---|---|
 | Nothing (or a text idea) | An image | `scripts/generate_image_from_text.py` |
 | A subject description (a character/person to keep consistent later) | A three-view turnaround character sheet | `scripts/generate_character_sheet.py` |
+| A character (with or without a reference photo) | A **profile / identity image** for that character | `scripts/generate_character_sheet.py` — **always**, even for a single "profile picture" ask. It builds its prompt from the fixed `prompt/three_angle_character_sheet.txt` template rather than an ad-hoc headshot prompt written from scratch (see below) |
 | One or more existing images | A modified/edited image | `scripts/generate_image_from_reference.py` (`--img` accepts multiple) |
 | Nothing (or a text idea) | A video | `scripts/generate_video_from_text.py` |
 | One existing image | A video animated from it | `scripts/generate_video_from_reference.py` |
@@ -137,6 +138,14 @@ is the strongest identity anchor when a recurring character matters — then ani
 `scripts/generate_video_from_reference.py`, rather than going straight to
 `scripts/generate_video_from_text.py` from text alone. Confirm before each call — they're
 separate generations with separate costs.
+
+**"Profile image" requests always go through the character-sheet template.** When asked for a
+character's "profile image," "identity image," "reference image," or similar (as opposed to a
+one-off in-scene shot for a specific video beat), default straight to
+`scripts/generate_character_sheet.py --idea ... --img ... --style ...` — don't draft a custom
+single-shot headshot prompt via `scripts/generate_image_from_reference.py` instead. The fixed
+turnaround template is also the strongest identity anchor for later animating that same
+character, so it does double duty as both the profile image and the anchor for step two above.
 
 ```bash
 python scripts/generate_image_from_text.py --prompt _project/prompt/product_shot_prompt.txt --output _project/output/product_shot.jpg

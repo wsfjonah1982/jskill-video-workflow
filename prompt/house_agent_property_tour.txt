@@ -1,0 +1,17 @@
+Cinematic realism, photorealistic, 35mm film aesthetic, warm natural lighting, shallow depth of field, <ratio>, <duration>s.
+
+@image1 is the subject identity anchor — <agent description: role, approximate age, appearance, attire, any prop they hold (e.g. a brochure)>. @image2 is <location 1 description — e.g. the interior/room shown in that reference photo>. @image3 is <location 2 description — e.g. the exterior/amenity shown in that reference photo>. (Add further @imageN lines here, one per additional location photo, keeping them in the same order as --img.)
+
+Shot 1: [<shot size + angle + camera movement>] Establishing shot of <location 1 detail> from @image2. The agent from @image1 <gesture/action>, <expression>.
+Dialogue (Agent, <emotion>): {<opening line — location/hook>}
+(<background music cue, e.g. soft ambient piano begins, understated and warm>)
+
+Shot 2: [<shot size + camera cut/movement>] Camera cuts to <location 2 detail> shown in @image3. The agent from @image1 <gesture/action>, <expression>.
+Dialogue (Agent, <emotion>): {<feature/amenity line>}
+<ambient sound effect, e.g. soft footsteps, birdsong, gentle breeze>
+
+Shot 3: [<shot size + camera cut/movement>] The agent <returns to / turns toward> <final location>, <closing expression>, <optional prop detail>.
+Dialogue (Agent, <emotion>): {<call-to-action line — e.g. inviting a message/viewing>}
+(<music cue — swells gently, then settles>)
+
+Preserve the exact architecture, interior, and landscaping shown in the reference images — do not alter the buildings, rooms, or grounds. no watermark, no logo, no subtitles, no on-screen text, no duplicate characters, no additional people, maintain cinematic realism style throughout

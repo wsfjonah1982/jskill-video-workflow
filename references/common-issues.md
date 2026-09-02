@@ -61,6 +61,24 @@ is a small paid generation.
 
 ---
 
+## V-0d: Image Generation Read Timeout
+
+**Symptom**: `scripts/generate_image_from_text.py`, `generate_image_from_reference.py`, or
+`generate_character_sheet.py` fails with `Read timed out. (read timeout=120)` or a connection
+reset, usually on an image-edit call (reference image(s) + prompt) rather than a plain
+text-to-image call.
+
+**Root cause**: Unlike video generation (async task + poll), image generation is one blocking
+HTTP call. The `dola-seedream-5-0-pro-260628` model can take over 120s on an edit call with a
+reference image — the old 120s `requests` timeout in `ArkImageService.generate_image()` cut it
+off mid-request.
+
+**Fix**: Already fixed — `scripts/ark_service.py`'s `ArkImageService.generate_image()` now uses
+a 300s timeout. If it still times out, just retry (transient network resets also show up here
+and a plain retry clears them).
+
+---
+
 ## V-1: Character ID Drift ("Face Swap" Mid-Video)
 
 **Symptom**: Generated character looks different from the reference image, or the
@@ -247,6 +265,7 @@ Voiceover finishes: {line here.} — followed by 1s ambient silence before clip 
 | V-0 | `ratio` rejected on image-to-video | Already fixed in `ark_service.py` — `generate_video_from_reference.py` omits `ratio`, output follows the input image |
 | V-0b | `role` required on multi-reference images | Already fixed in `generate_video_from_multi_references.py` — each image gets `"role": "reference_image"` |
 | V-0c | Reference image shorter than 300px rejected | Upscale it first (PIL resize, or AI upscale via `generate_image_from_reference.py`) |
+| V-0d | Image generation read timeout (120s) | Already fixed — `ark_service.py`'s `ArkImageService` now uses a 300s timeout; retry on transient network errors |
 | V-1 | Character face changes | Use a clean, well-lit, tightly-cropped reference image as the first frame |
 | V-2 | Unwanted subtitles | Add "no subtitles" to prompt; set `video_ratio: "16:9"` in config |
 | V-3 | Platform logos/watermarks | Add "no watermark, no logo" to prompt; confirm `watermark: false` in config |
