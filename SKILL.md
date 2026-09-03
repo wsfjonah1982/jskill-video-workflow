@@ -62,6 +62,13 @@ Ask 2–4 targeted questions if the user's request is underspecified: subject, a
 `generate_audio: true` — dialogue/music/SFX. If the user already gave enough detail (e.g. a
 full scene description), skip straight to writing the prompt.
 
+**Before writing anything to a file (idea, prompt, or proposal), summarize the idea back to
+the user in one sentence** — the key identifying details only (role, subject, distinguishing
+attributes: age, ethnicity, gender, attire, setting, etc.), not the full prose you're about to
+write. This is a cheap, fast checkpoint that catches a misread detail before it's baked into an
+idea file, a prompt file, and eventually a paid generation. Get at least implicit confirmation
+(the user proceeding, or a quick "yes"/"go ahead") before moving on to Step 4.
+
 ### Step 3 — Load references as needed
 
 | Need | Reference file |
