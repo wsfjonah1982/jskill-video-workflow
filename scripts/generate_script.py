@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ark_service import ArkChatService
+from ark_service import ArkChatService, extract_token_usage
 
 # Allow Unicode output on Windows consoles
 if hasattr(sys.stdout, "reconfigure"):
@@ -101,7 +101,7 @@ def main() -> int:
         print(f"Model: {model_id}", file=sys.stderr)
 
         system_prompt = read_template("script_system.md")
-        script_text = service.complete(model_id=model_id, system_prompt=system_prompt, user_prompt=idea)
+        script_text, usage = service.complete(model_id=model_id, system_prompt=system_prompt, user_prompt=idea)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(script_text, encoding="utf-8")
@@ -109,7 +109,13 @@ def main() -> int:
         total_s = round(time.monotonic() - t_start, 2)
         print(f"Saved: {output_path}  ({total_s}s)", file=sys.stderr)
 
-        log.update({"script_chars": len(script_text), "total_s": total_s, "status": "succeeded"})
+        log.update({
+            "script_chars": len(script_text),
+            **extract_token_usage(usage),
+            "usage": usage,
+            "total_s": total_s,
+            "status": "succeeded",
+        })
         write_log(log_path, log)
 
         print(str(output_path))

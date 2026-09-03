@@ -97,6 +97,27 @@ branding to fill the prop/clothing, and the character-sheet template didn't carr
 
 ---
 
+## V-0f: Token Usage Silently Missing/Wrong in Logs
+
+**Symptom**: A `.log` entry's `tokens_in`/`tokens_out` are `null` even though the API call
+clearly did work (and cost something), or a naive fix reports `0` instead of `null` for a call
+that didn't report usage at all — indistinguishable from a genuine zero.
+
+**Root cause**: Different Ark endpoints report usage under different key names. Chat
+completions use the OpenAI-style `prompt_tokens`/`completion_tokens`. Image generation uses a
+completely different shape — verified live: `{"input_images": 0, "generated_images": 1,
+"output_tokens": 16384, "total_tokens": 16384}` — no `prompt_tokens`/`completion_tokens` at
+all, so code written only for the chat shape silently drops the real `output_tokens` value.
+
+**Fix**: Already fixed — `scripts/ark_service.py`'s `extract_token_usage()` normalizes both
+shapes into `{tokens_in, tokens_out, tokens_total}`, and every generation script logs both the
+normalized fields and the full raw `usage` dict (so nothing is lost even for a shape this
+normalizer doesn't yet know about — e.g. video's `usage` schema is still unverified live,
+unlike chat/image which were both confirmed with a real call). Missing values are `None`, never
+`0`, so "not reported" stays distinguishable from a genuine zero.
+
+---
+
 ## V-1: Character ID Drift ("Face Swap" Mid-Video)
 
 **Symptom**: Generated character looks different from the reference image, or the
@@ -285,6 +306,7 @@ Voiceover finishes: {line here.} — followed by 1s ambient silence before clip 
 | V-0c | Reference image shorter than 300px rejected | Upscale it first (PIL resize, or AI upscale via `generate_image_from_reference.py`) |
 | V-0d | Image generation read timeout (120s) | Already fixed — `ark_service.py`'s `ArkImageService` now uses a 300s timeout; retry on transient network errors |
 | V-0e | Character sheet invents a brand/logo | Already fixed — both character-sheet templates now include `no watermark, no logo, no brand text, no invented branding` |
+| V-0f | Token usage missing/wrong in logs | Already fixed — `extract_token_usage()` normalizes chat vs. image usage shapes; raw `usage` dict also logged in full |
 | V-1 | Character face changes | Use a clean, well-lit, tightly-cropped reference image as the first frame |
 | V-2 | Unwanted subtitles | Add "no subtitles" to prompt; set `video_ratio: "16:9"` in config |
 | V-3 | Platform logos/watermarks | Add "no watermark, no logo" to prompt; confirm `watermark: false` in config |

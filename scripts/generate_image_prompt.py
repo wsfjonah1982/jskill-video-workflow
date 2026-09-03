@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ark_service import ArkChatService
+from ark_service import ArkChatService, extract_token_usage
 
 # Allow Unicode output on Windows consoles
 if hasattr(sys.stdout, "reconfigure"):
@@ -104,6 +104,7 @@ def main() -> int:
         idea     = read_idea(idea_path)
         log["style"] = style
 
+        usage = {}
         if args.img:
             # The reference photo carries the subject's appearance directly — skip the LLM
             # and use a plain turnaround template, same as jonah-simple-video-flow does when
@@ -124,7 +125,7 @@ def main() -> int:
 
             system_prompt = read_template("image_prompt_system.md")
             user_prompt   = read_template("image_prompt_user.md").format(idea=idea, style=style)
-            prompt_text   = service.complete(model_id=model_id, system_prompt=system_prompt, user_prompt=user_prompt)
+            prompt_text, usage = service.complete(model_id=model_id, system_prompt=system_prompt, user_prompt=user_prompt)
 
         prompt_text = f"{prompt_text} Art style: {style}."
 
@@ -134,7 +135,13 @@ def main() -> int:
         total_s = round(time.monotonic() - t_start, 2)
         print(f"Saved: {output_path}  ({total_s}s)", file=sys.stderr)
 
-        log.update({"prompt_chars": len(prompt_text), "total_s": total_s, "status": "succeeded"})
+        log.update({
+            "prompt_chars": len(prompt_text),
+            **extract_token_usage(usage),
+            "usage": usage,
+            "total_s": total_s,
+            "status": "succeeded",
+        })
         write_log(log_path, log)
 
         print(str(output_path))

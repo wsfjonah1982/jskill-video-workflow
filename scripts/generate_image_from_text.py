@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ark_service import ArkImageService, download_file
+from ark_service import ArkImageService, download_file, extract_token_usage
 
 # Allow Unicode output on Windows consoles
 if hasattr(sys.stdout, "reconfigure"):
@@ -56,12 +56,12 @@ def read_prompts(path: Path) -> list[str]:
     return prompts
 
 
-def generate_image(service: ArkImageService, prompt: str, model_id: str, size: str, watermark: bool) -> str:
-    images = service.generate_image(model_id=model_id, prompt=prompt, size=size, watermark=watermark)
+def generate_image(service: ArkImageService, prompt: str, model_id: str, size: str, watermark: bool) -> tuple[str, dict]:
+    images, usage = service.generate_image(model_id=model_id, prompt=prompt, size=size, watermark=watermark)
     url = images[0]["url"] if images else None
     if not url:
         raise RuntimeError(f"No image URL returned for prompt: {prompt!r}")
-    return url
+    return url, usage
 
 
 def write_log(log_path: Path, data: dict) -> None:
@@ -110,7 +110,7 @@ def main() -> int:
             print(f"[{i}/{len(prompts)}] Generating: {prompt[:80]}{'...' if len(prompt) > 80 else ''}", file=sys.stderr)
 
             try:
-                image_url = generate_image(service, prompt, model_id, size, watermark)
+                image_url, usage = generate_image(service, prompt, model_id, size, watermark)
                 dl_s = download_file(image_url, output_path)
                 elapsed = time.monotonic() - t_img
 
@@ -123,6 +123,8 @@ def main() -> int:
                     "prompt":      prompt,
                     "output":      str(output_path),
                     "image_url":   image_url,
+                    **extract_token_usage(usage),
+                    "usage":       usage,
                     "elapsed_s":   round(elapsed, 2),
                     "download_s":  round(dl_s, 2),
                     "status":      "succeeded",

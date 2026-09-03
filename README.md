@@ -167,6 +167,10 @@ for step 1 — it's a stronger identity anchor for step 2 (turnaround sheet vs. 
 - A `.log` file (JSON lines) is written to `_project/log/`, named after the output file
   (e.g. `_project/output/output_video.mp4` → `_project/log/output_video.mp4.log`) — not next to
   the output itself.
+- Each log entry records `tokens_in`/`tokens_out`/`tokens_total` (normalized across the
+  different usage shapes chat/image/video APIs return — `null`, not `0`, when a value wasn't
+  reported) plus the raw `usage` dict, and timing (`total_s`; video also breaks out
+  `ttft_s`/`generation_s`/`download_s`).
 
 ## Subfolders
 
@@ -179,7 +183,7 @@ for step 1 — it's a stronger identity anchor for step 2 (turnaround sheet vs. 
 | `_project/input/` | Files uploaded for this project — images, audio, reference materials |
 | `_project/output/` | Generated results from API calls for this project — images, videos |
 | `_project/log/` | Transaction logs: each run's `.log` JSON record for this project |
-| `_project/script/` | This project's video script / narration text |
+| `_project/script/` | This project's video script / narration text, plus the pre-generation `<output-name>_proposal.txt` files (see `SKILL.md` Step 5) |
 | `_project/prompt/` | This project's generation prompt `.txt` files |
 | `_upload/`, `_output/`, `_log/` (top-level) | Legacy shared folders from before the per-project convention — hold older projects' files; don't add new work here |
 

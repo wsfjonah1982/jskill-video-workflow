@@ -94,13 +94,20 @@ record in `_project/log/` (Step 6). Two format rules matter:
   (a plain subject description) instead, and it builds the fixed character-sheet prompt itself.
   Skip Steps 3–4 for this one; just write the idea description and go straight to Step 5.
 
-### Step 5 — Confirm settings, then run the script
+### Step 5 — Write the plan to a proposal file, confirm, then run the script
 
-**Before invoking any generation script, show the user the settings that will
-actually be used and get their explicit go-ahead.** These are real, paid, non-instant API
-calls (video generation in particular can run several minutes) — confirm first rather than
-finding out the duration/audio/style was wrong after paying for it. Display a short summary
-pulled from the live `config.json` plus what this specific generation will do, e.g.:
+**Before invoking any generation script, write the plan to a proposal file under
+`_project/script/`, then show the user that same summary and get their explicit go-ahead.**
+These are real, paid, non-instant API calls (video generation in particular can run several
+minutes) — confirm first rather than finding out the duration/audio/style was wrong after
+paying for it. The written proposal is what makes the plan durable — chat scrollback isn't a
+project record, and a later session (or a re-run) should be able to read exactly what was
+planned without replaying the conversation.
+
+Name the file `_project/script/<output-name>_proposal.txt` (e.g. the plan for
+`singapore_condo_agent_v2.mp4` goes to `_project/script/singapore_condo_agent_v2_proposal.txt`).
+Include what's being generated, which references/settings drive it, and — for a video — the
+shot-by-shot plan (camera, action, dialogue) in plain language, e.g.:
 
 ```
 About to generate:
@@ -111,14 +118,19 @@ About to generate:
   Reference: _project/output/singapore_condo_agent_v2.jpg
   Prompt:    _project/prompt/singapore_condo_agent_v2_video_prompt_30s_audio.txt
 
+Shot 1: ...
+Shot 2: ...
+Shot 3: ...
+
 Proceed?
 ```
 
-Wait for a yes before running. Skip this confirmation only if the user already explicitly
-approved these exact settings in the same request (e.g. they just asked you to change
-`config.json` to specific values and immediately said to rerun) — don't ask twice for the
-same confirmation. If they say to change something, update `config.json` (Step 1) or the
-prompt (Step 4) first, then re-show the summary before running.
+Show this same summary to the user and wait for a yes before running. Skip this confirmation
+only if the user already explicitly approved these exact settings in the same request (e.g.
+they just asked you to change `config.json` to specific values and immediately said to rerun)
+— don't ask twice for the same confirmation, but still write the proposal file either way. If
+they say to change something, update `config.json` (Step 1) or the prompt (Step 4) first, then
+rewrite the proposal and re-show the summary before running.
 
 Pick the script based on what the user has and wants (see `references/best-practices.md` §3):
 
@@ -157,8 +169,11 @@ python scripts/generate_video_from_reference.py --img _project/output/product_sh
 Each script prints only the output file path to stdout on success; progress goes to stderr,
 and a `.log` JSON-lines transaction record is written to `_project/log/` (named after the output
 file, e.g. `_project/output/product_orbit.mp4` → `_project/log/product_orbit.mp4.log`) — not
-next to the output itself. After a run, skim the log for `status: failed` and check the output
-against `references/common-issues.md` if something looks off (subtitles that weren't asked for,
+next to the output itself. Each entry also records `tokens_in`/`tokens_out`/`tokens_total`
+(normalized across chat/image/video usage shapes — `null` when the API didn't report a value,
+never `0`) plus the raw `usage` dict, and `total_s` for how long the call took end to end
+(video also breaks this down into `ttft_s`/`generation_s`/`download_s`). After a run, skim the
+log for `status: failed` and check the output against `references/common-issues.md` if something looks off (subtitles that weren't asked for,
 a watermark, style drift, duplicate characters) — most of these have a one-line prompt fix or a
 `config.json` fix.
 
@@ -266,7 +281,7 @@ first, then `model_ark_key` in `credential.json`. Neither lives in `config.json`
 | `_project/input/` | Reference images, audio, source material for this project (replaces the old shared `_upload/`) |
 | `_project/output/` | Generated results from API calls for this project — images, videos (replaces the old shared `_output/`) |
 | `_project/log/` | Each run's `.log` JSON transaction record for this project (replaces the old shared `_log/`'s `.log` files) |
-| `_project/script/` | The video script / narration text for this project (e.g. `scripts/generate_script.py`'s output) |
+| `_project/script/` | The video script / narration text for this project (e.g. `scripts/generate_script.py`'s output), plus the pre-generation `<output-name>_proposal.txt` files from Step 5 |
 | `_project/prompt/` | The generation prompt `.txt` files you write per Step 4 (or that `generate_image_prompt.py`/`generate_video_prompt.py` produce) for this project |
 | `_upload/`, `_output/`, `_log/` (top-level) | Legacy shared folders from before the per-project convention — still hold older projects' files; don't add new work here |
 

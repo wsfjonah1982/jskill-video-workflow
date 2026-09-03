@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ark_service import ArkVideoService, download_file
+from ark_service import ArkVideoService, download_file, extract_token_usage
 
 # Allow Unicode output on Windows consoles
 if hasattr(sys.stdout, "reconfigure"):
@@ -122,13 +122,15 @@ def main() -> int:
 
         print(f"Saved: {output_path}  ({total_s:.1f}s, download {dl_s:.1f}s)", file=sys.stderr)
 
+        usage = metrics.get("usage") or {}
         log.update({
             "ttft_s":            metrics["ttft_s"],
             "generation_s":      metrics["generation_s"],
             "tpot_s_per_s":      metrics["tpot_s"],
+            **extract_token_usage(usage),
             "download_s":        round(dl_s, 2),
             "total_s":           round(total_s, 2),
-            "usage":             metrics["usage"],
+            "usage":             usage,
             "result_request_id": metrics["request_id"],
             "status":            "succeeded",
         })

@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ark_service import ArkImageService, download_file, file_to_data_url
+from ark_service import ArkImageService, download_file, file_to_data_url, extract_token_usage
 
 # Allow Unicode output on Windows consoles
 if hasattr(sys.stdout, "reconfigure"):
@@ -47,12 +47,12 @@ def load_api_key() -> str:
     return api_key
 
 
-def generate_image(service: ArkImageService, prompt: str, image: str | list[str], model_id: str, size: str, watermark: bool) -> str:
-    images = service.generate_image(model_id=model_id, prompt=prompt, image=image, size=size, watermark=watermark)
+def generate_image(service: ArkImageService, prompt: str, image: str | list[str], model_id: str, size: str, watermark: bool) -> tuple[str, dict]:
+    images, usage = service.generate_image(model_id=model_id, prompt=prompt, image=image, size=size, watermark=watermark)
     url = images[0]["url"] if images else None
     if not url:
         raise RuntimeError("No image URL returned")
-    return url
+    return url, usage
 
 
 def write_log(log_path: Path, data: dict) -> None:
@@ -117,14 +117,21 @@ def main() -> int:
         image = image_data_urls[0] if len(image_data_urls) == 1 else image_data_urls
 
         print(f"Generating...", file=sys.stderr)
-        image_url = generate_image(service, prompt, image, model_id, size, watermark)
+        image_url, usage = generate_image(service, prompt, image, model_id, size, watermark)
 
         dl_s    = download_file(image_url, output_path)
         total_s = round(time.monotonic() - t_start, 2)
 
         print(f"Saved: {output_path}  ({total_s}s, download {dl_s:.1f}s)", file=sys.stderr)
 
-        log.update({"image_url": image_url, "total_s": total_s, "download_s": round(dl_s, 2), "status": "succeeded"})
+        log.update({
+            "image_url": image_url,
+            **extract_token_usage(usage),
+            "usage": usage,
+            "total_s": total_s,
+            "download_s": round(dl_s, 2),
+            "status": "succeeded",
+        })
         write_log(log_path, log)
 
         print(str(output_path))

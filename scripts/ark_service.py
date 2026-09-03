@@ -14,6 +14,27 @@ from pathlib import Path
 import requests
 
 
+def extract_token_usage(usage: dict | None) -> dict:
+    """Normalizes an Ark API `usage` dict into {tokens_in, tokens_out, tokens_total} for
+    logging. Different endpoints use different key names — chat completions use
+    prompt_tokens/completion_tokens, image generation uses input_images/output_tokens (verified
+    live: {"input_images": 0, "generated_images": 1, "output_tokens": 16384, "total_tokens":
+    16384} — no prompt_tokens/completion_tokens at all). Missing values are None, not 0, so a
+    genuine zero-token value is never confused with "not reported"."""
+    usage = usage or {}
+    tokens_in = usage.get("prompt_tokens")
+    if tokens_in is None:
+        tokens_in = usage.get("input_tokens")
+    tokens_out = usage.get("completion_tokens")
+    if tokens_out is None:
+        tokens_out = usage.get("output_tokens")
+    return {
+        "tokens_in": tokens_in,
+        "tokens_out": tokens_out,
+        "tokens_total": usage.get("total_tokens"),
+    }
+
+
 def guess_mime_from_path(path) -> str:
     ext = str(path).rsplit(".", 1)[-1].lower() if "." in str(path) else ""
     if ext in ("jpg", "jpeg"):
@@ -56,7 +77,9 @@ class ArkChatService:
         }
 
     def complete(self, model_id: str, system_prompt: str, user_prompt: str,
-                 image_data_urls: list[str] | None = None) -> str:
+                 image_data_urls: list[str] | None = None) -> tuple[str, dict]:
+        """Returns (text, usage) — usage is the Ark API's token-usage dict (prompt_tokens,
+        completion_tokens, total_tokens), or {} if the response didn't include one."""
         print(f"Chat completion: model={model_id} system_len={len(system_prompt)} "
               f"user_len={len(user_prompt)} images={len(image_data_urls or [])}", file=sys.stderr)
 
@@ -84,8 +107,10 @@ class ArkChatService:
         if not choices:
             raise RuntimeError(f"Chat completion returned no choices: {data}")
         text = (choices[0].get('message') or {}).get('content', '').strip()
-        print(f"Chat completion done: result_len={len(text)}", file=sys.stderr)
-        return text
+        usage = data.get('usage') or {}
+        print(f"Chat completion done: result_len={len(text)} "
+              f"tokens_in={usage.get('prompt_tokens')} tokens_out={usage.get('completion_tokens')}", file=sys.stderr)
+        return text, usage
 
 
 class ArkImageService:
@@ -99,7 +124,9 @@ class ArkImageService:
         }
 
     def generate_image(self, model_id: str, prompt: str, image: list[str] | str | None = None,
-                        size: str | None = None, watermark: bool | None = None) -> list[dict]:
+                        size: str | None = None, watermark: bool | None = None) -> tuple[list[dict], dict]:
+        """Returns (images, usage) — usage is the Ark API's token-usage dict, if the response
+        included one (image models are not always token-billed), or {} otherwise."""
         img_count = len(image) if isinstance(image, list) else (1 if image else 0)
         print(f"Image generation: model={model_id} prompt_len={len(prompt)} images={img_count} "
               f"size={size} watermark={watermark}", file=sys.stderr)
@@ -125,8 +152,9 @@ class ArkImageService:
             {'url': img.get('url'), 'b64_json': img.get('b64_json')}
             for img in (data.get('data') or [])
         ]
-        print(f"Image generation done: count={len(images)}", file=sys.stderr)
-        return images
+        usage = data.get('usage') or {}
+        print(f"Image generation done: count={len(images)} usage={usage}", file=sys.stderr)
+        return images, usage
 
 
 class ArkVideoService:

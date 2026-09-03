@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ark_service import ArkImageService, download_file, file_to_data_url
+from ark_service import ArkImageService, download_file, file_to_data_url, extract_token_usage
 
 # Allow Unicode output on Windows consoles
 if hasattr(sys.stdout, "reconfigure"):
@@ -133,7 +133,7 @@ def main() -> int:
             image = image_data_urls[0] if len(image_data_urls) == 1 else image_data_urls
 
         print("Generating...", file=sys.stderr)
-        images = service.generate_image(model_id=model_id, prompt=prompt, image=image, size=size, watermark=watermark)
+        images, usage = service.generate_image(model_id=model_id, prompt=prompt, image=image, size=size, watermark=watermark)
         image_url = images[0]["url"] if images else None
         if not image_url:
             raise RuntimeError("No image URL returned")
@@ -143,7 +143,14 @@ def main() -> int:
 
         print(f"Saved: {output_path}  ({total_s}s, download {dl_s:.1f}s)", file=sys.stderr)
 
-        log.update({"image_url": image_url, "total_s": total_s, "download_s": round(dl_s, 2), "status": "succeeded"})
+        log.update({
+            "image_url": image_url,
+            **extract_token_usage(usage),
+            "usage": usage,
+            "total_s": total_s,
+            "download_s": round(dl_s, 2),
+            "status": "succeeded",
+        })
         write_log(log_path, log)
 
         print(str(output_path))

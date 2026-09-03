@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ark_service import ArkChatService, file_to_data_url
+from ark_service import ArkChatService, file_to_data_url, extract_token_usage
 
 # Allow Unicode output on Windows consoles
 if hasattr(sys.stdout, "reconfigure"):
@@ -129,8 +129,8 @@ def main() -> int:
               f"Duration: {duration}s  Ratio: {ratio}", file=sys.stderr)
         print(f"Model: {model_id}", file=sys.stderr)
 
-        prompt_text = service.complete(model_id=model_id, system_prompt=system_prompt,
-                                        user_prompt=user_prompt, image_data_urls=image_data_urls)
+        prompt_text, usage = service.complete(model_id=model_id, system_prompt=system_prompt,
+                                               user_prompt=user_prompt, image_data_urls=image_data_urls)
         prompt_text = f"{prompt_text} Art style: {style}."
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -139,7 +139,13 @@ def main() -> int:
         total_s = round(time.monotonic() - t_start, 2)
         print(f"Saved: {output_path}  ({total_s}s)", file=sys.stderr)
 
-        log.update({"prompt_chars": len(prompt_text), "total_s": total_s, "status": "succeeded"})
+        log.update({
+            "prompt_chars": len(prompt_text),
+            **extract_token_usage(usage),
+            "usage": usage,
+            "total_s": total_s,
+            "status": "succeeded",
+        })
         write_log(log_path, log)
 
         print(str(output_path))
